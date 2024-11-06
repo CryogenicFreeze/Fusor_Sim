@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 # Parameters for point generation
-num_points = 3000  # Number of points to generate
+num_points = 1  # Number of points to generate
 max_radius = 200   # Maximum radius from the origin
 lambda_ = 50       # Fall-off rate for density distribution
 grid_size = 50     # The size of the grid for density calculation (number of divisions along each axis)

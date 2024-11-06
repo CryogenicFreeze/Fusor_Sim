@@ -6,12 +6,12 @@ import json
 # Settings
 points_file = 'points.json'
 grid_file = 'grid.json'
+WIDTH, HEIGHT = 950, 800
 
 # Initialize Pygame
 pygame.init()
 
 # Screen settings
-WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Fusor Grid")
 
@@ -52,10 +52,12 @@ except FileNotFoundError:
 
 # Ring Class 
 class Ring:
-    def __init__(self, radius, major_axis_angle, distance_from_origin, segments=50):
+    def __init__(self, radius, major_axis_angle, center_x, center_y, center_z, segments=50):
         self.radius = radius
         self.major_axis_angle = major_axis_angle  # In degrees
-        self.distance_from_origin = distance_from_origin
+        self.center_x = center_x
+        self.center_y = center_y
+        self.center_z = center_z
         self.num_segments = segments  # Number of segments around the ring
     
     def generate_points(self):
@@ -74,12 +76,12 @@ class Ring:
             z_rot = -x * math.sin(angle_rad) + z * math.cos(angle_rad)
             
             # Translate along the z-axis by distance_from_origin
-            points.append((x_rot, y, self.distance_from_origin + z_rot))
+            points.append((x_rot + self.center_x, y + self.center_y, z_rot + self.center_z))
         
         return points
     @classmethod
     def from_dict(cls, data):
-        return cls(data['radius'], data['major_axis_angle'], data['distance_from_origin'], data['segments'])
+        return cls(data['radius'], data['major_axis_angle'], data['center_x'], data['center_y'], data['center_z'], data['segments'])
     
     def generate_edges(self):
         points = self.generate_points()
