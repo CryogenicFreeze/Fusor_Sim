@@ -1,0 +1,14 @@
+[
+    {
+        "radius": 100,
+        "major_axis_angle": 0,
+        "distance_from_origin": 0,
+        "segments": 50
+    },
+    {
+        "radius": 100,
+        "major_axis_angle": 90,
+        "distance_from_origin": 0,
+        "segments": 50
+    }
+]
