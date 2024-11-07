@@ -4,10 +4,10 @@ import math
 import numpy as np
 
 # Parameters for point generation
-num_points = 1  # Number of points to generate
-max_radius = 200   # Maximum radius from the origin
-lambda_ = 50       # Fall-off rate for density distribution
-grid_size = 50     # The size of the grid for density calculation (number of divisions along each axis)
+num_points = 3000  # Number of points to generate
+max_radius = 120  # Maximum radius from the origin
+lambda_ = 10       # Fall-off rate for density distribution
+grid_size = 10     # The size of the grid for density calculation (number of divisions along each axis)
 neighbor_radius = 5  # The radius for considering neighbors (local neighborhood for density)
 
 # Function to generate a random point with exponential fall-off
@@ -44,7 +44,7 @@ def calculate_density_and_color(point, all_points, neighbor_radius=neighbor_radi
     red_intensity = min(255, density * 10)  # Scale factor for red intensity (density * scale_factor)
 
     # Color should transition from white (255, 255, 255) to red (255, 0, 0)
-    return [255 - red_intensity, 255 - red_intensity, 255]  # White -> Red gradient (R and G decrease as Red increases)
+    return [158, 98, 255]  # White -> Red gradient (R and G decrease as Red increases)
 
 # Generate points
 points = [generate_point() for _ in range(num_points)]
@@ -57,4 +57,4 @@ for point in points:
 with open("points.json", "w") as file:
     json.dump(points, file, indent=4)
 
-print(f"Generated {num_points} points with density-based gradient colors and saved to 'points_density_gradient.json'")
+print(f"Generated {num_points} points with density-based gradient colors and saved to 'points.json'")

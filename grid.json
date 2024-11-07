@@ -1,35 +1,30 @@
 [
     {
         "radius": 100,
-        "major_axis_angle": 0,
         "center_x": 0,
-        "center_y": 0,
+        "center_y": 1,
         "center_z": 0,
-        "segments": 50
+        "segments": 75
     },
     {
         "radius": 100,
-        "major_axis_angle": 45,
-        "center_x": 0,
+        "center_x": 1,
         "center_y": 0,
         "center_z": 0,
-        "segments": 50
+        "segments": 75
     },
     {
         "radius": 100,
-        "major_axis_angle": 90,
-        "center_x": 0,
-        "center_y": 0,
+        "center_x": 1,
+        "center_y": 1,
         "center_z": 0,
-        "segments": 50
+        "segments": 75
     },
     {
         "radius": 100,
-        "major_axis_angle": 135,
-        "center_x": 0,
-        "center_y": 0,
+        "center_x": -1,
+        "center_y": 1,
         "center_z": 0,
-        "segments": 50
+        "segments": 75
     }
-    
 ]
