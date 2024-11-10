@@ -9,6 +9,12 @@ GRID_FILE = 'grid.json'
 WIDTH, HEIGHT = 950, 800
 background_color = (20, 20, 20)
 MAX_FPS = 60 #0-60
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+BLACK = (0, 0, 0)
+LIGHT_GRAY = (200, 200, 200)
 
 # Initialize Pygame
 pygame.init()
@@ -16,14 +22,6 @@ pygame.init()
 # Screen settings
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Fusor Grid")
-
-# default colors
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-BLACK = (0, 0, 0)
-LIGHT_GRAY = (200, 200, 200)
 
 # font init
 font = pygame.font.Font(None, 20)
@@ -50,10 +48,6 @@ try:
 except FileNotFoundError:
     print("points Json missing")
     points = []
-
-# Ring Class 
-import math
-import numpy as np
 
 class Ring:
     def __init__(self, radius, x_c, y_c, z_c, x_ang, y_ang, z_ang, segments=50):
@@ -107,7 +101,6 @@ class Ring:
         points = self.generate_points()
         edges = []
         
-        # Connect consecutive points with edges
         for i in range(len(points)):
             start_point = points[i]
             end_point = points[(i + 1) % len(points)]
@@ -143,21 +136,18 @@ class Camera:
         self.angle_y += delta_x
 
     def get_projection_matrix(self):
-        # Rotation matrix around x-axis
         rotation_x = np.array([
             [1, 0, 0],
             [0, math.cos(self.angle_x), -math.sin(self.angle_x)],
             [0, math.sin(self.angle_x), math.cos(self.angle_x)]
         ])
         
-        # Rotation matrix around y-axis
         rotation_y = np.array([
             [math.cos(self.angle_y), 0, math.sin(self.angle_y)],
             [0, 1, 0],
             [-math.sin(self.angle_y), 0, math.cos(self.angle_y)]
         ])
         
-        # Combine rotations
         return rotation_y @ rotation_x
 
     def project_point(self, point):
@@ -171,6 +161,15 @@ class Camera:
         y_proj = rotated_point[1] * factor
         
         return x_proj, y_proj
+    
+def draw_line(screen, start_point, end_point, camera, color, screen_origin_x, screen_origin_y):
+    x_1, y_1 = camera.project_point(start_point)
+    x_2, y_2 = camera.project_point(end_point)
+    x_1 += screen_origin_x
+    x_2 += screen_origin_x
+    y_1 += screen_origin_y
+    y_2 += screen_origin_y
+    pygame.draw.line(screen, color, (x_1, y_1), (x_2, y_2), 5)
 
 # Main Loop
 def main():
@@ -212,6 +211,12 @@ def main():
         text_surface = font.render(f"FPS: {int(fps)}", True, WHITE)
         text_rect = text_surface.get_rect(center=(50, 50))
         screen.blit(text_surface, text_rect)
+
+        #draw lines
+        draw_line(screen, (0,0,0), (50,0,0), camera, RED, WIDTH/8, 7*HEIGHT/8)
+        draw_line(screen, (0,0,0), (0,50,0), camera, BLUE, WIDTH/8, 7*HEIGHT/8)
+        draw_line(screen, (0,0,0), (0,0,50), camera, GREEN, WIDTH/8, 7*HEIGHT/8)
+        draw_line(screen, (0,100,0), (0,150,0), camera, LIGHT_GRAY, WIDTH/2, HEIGHT/2)
 
         # Update display
         pygame.display.flip()
