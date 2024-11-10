@@ -3,10 +3,6 @@ import math
 import numpy as np
 import json
 
-"""
-Units: mm
-"""
-
 # Settings
 POINTS_FILE = 'points.json'
 GRID_FILE = 'grid.json'
@@ -35,9 +31,7 @@ font = pygame.font.Font(None, 20)
 # Points class
 class Point:
     def __init__(self, x, y, z, color=WHITE):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x, self.y, self.z = x, y, z
         self.color = color
     def project_to_2d(self, camera):
         return camera.project_point((self.x, self.y, self.z))
@@ -58,98 +52,73 @@ except FileNotFoundError:
     points = []
 
 # Ring Class 
+import math
+import numpy as np
+
 class Ring:
-    def __init__(self, radius, center_x, center_y, center_z, segments=50):
+    def __init__(self, radius, x_c, y_c, z_c, x_ang, y_ang, z_ang, segments=50):
         self.radius = radius
-        self.center_x = center_x
-        self.center_y = center_y
-        self.center_z = center_z
-        self.num_segments = segments
-    
+        self.x_c, self.y_c, self.z_c = x_c, y_c, z_c
+        self.x_ang, self.y_ang, self.z_ang = x_ang, y_ang, z_ang
+        self.segments = segments
+
     def generate_points(self):
         points = []
+        rotation_matrix = self.rotation_matrix(self.x_ang, self.y_ang, self.z_ang)
         
-        # Step 1: Calculate the normal vector (from ring center to origin)
-        normal_x = -self.center_x
-        normal_y = -self.center_y
-        normal_z = -self.center_z
-        
-        # Normalize the normal vector to get a unit vector
-        norm = math.sqrt(normal_x**2 + normal_y**2 + normal_z**2)
-        normal_x /= norm
-        normal_y /= norm
-        normal_z /= norm
-        
-        # Step 2: Calculate the axis of rotation and the angle required
-        # The ring is initially in the x-y plane (normal = (0, 0, 1))
-        initial_normal = np.array([0, 0, 1])
-        ring_normal = np.array([normal_x, normal_y, normal_z])
-        
-        # Compute the axis of rotation (cross product of initial_normal and ring_normal)
-        axis_of_rotation = np.cross(initial_normal, ring_normal)
-        axis_of_rotation_norm = np.linalg.norm(axis_of_rotation)
-        
-        if axis_of_rotation_norm > 1e-6:  # Avoid division by zero
-            axis_of_rotation /= axis_of_rotation_norm
-        else:
-            axis_of_rotation = np.array([1, 0, 0])  # Arbitrary if no rotation is needed
-        
-        # Compute the angle between the two vectors (dot product)
-        dot_product = np.dot(initial_normal, ring_normal)
-        angle = math.acos(dot_product)
-        
-        # Step 3: Generate the points in the ring (in the x-y plane initially)
-        for i in range(self.num_segments):
-            theta = 2 * math.pi * i / self.num_segments
+        for i in range(self.segments):
+            theta = 2 * math.pi * i / self.segments
             x = self.radius * math.cos(theta)
             y = self.radius * math.sin(theta)
-            z = 0  # Initially the ring lies in the x-y plane
-            
-            # Step 4: Rotate the points around the axis_of_rotation by the angle
-            rotation_matrix = self.rotation_matrix(axis_of_rotation, angle)
-            point = np.array([x, y, z])
-            rotated_point = np.dot(rotation_matrix, point)
-            
-            # Step 5: Translate the rotated points to the ring's center
-            points.append((rotated_point[0] + self.center_x, rotated_point[1] + self.center_y, rotated_point[2] + self.center_z))
+            z = 0
+
+            rotated_point = rotation_matrix @ np.array([x, y, z])
+            points.append((rotated_point[0] + self.x_c, rotated_point[1] + self.y_c, rotated_point[2] + self.z_c))
         
         return points
-    
-    def rotation_matrix(self, axis, theta):
-        """Generates a rotation matrix for rotating points around a given axis by angle theta"""
-        axis = axis / np.linalg.norm(axis)  # Normalize the axis
+
+    def rotation_matrix(self, x_ang, y_ang, z_ang):
+        a = math.radians(x_ang)
+        b = math.radians(y_ang)
+        g = math.radians(z_ang)
         
-        cos_theta = math.cos(theta)
-        sin_theta = math.sin(theta)
-        ux, uy, uz = axis
-        
-        # 3x3 rotation matrix (Rodrigues' rotation formula)
-        rotation_matrix = np.array([
-            [cos_theta + ux**2 * (1 - cos_theta), ux * uy * (1 - cos_theta) - uz * sin_theta, ux * uz * (1 - cos_theta) + uy * sin_theta],
-            [uy * ux * (1 - cos_theta) + uz * sin_theta, cos_theta + uy**2 * (1 - cos_theta), uy * uz * (1 - cos_theta) - ux * sin_theta],
-            [uz * ux * (1 - cos_theta) - uy * sin_theta, uz * uy * (1 - cos_theta) + ux * sin_theta, cos_theta + uz**2 * (1 - cos_theta)]
+        rot_x = np.array([
+            [1, 0, 0],
+            [0, math.cos(a), -math.sin(a)],
+            [0, math.sin(a), math.cos(a)]
         ])
         
+        rot_y = np.array([
+            [math.cos(b), 0, math.sin(b)],
+            [0, 1, 0],
+            [-math.sin(b), 0, math.cos(b)]
+        ])
+        
+        rot_z = np.array([
+            [math.cos(g), -math.sin(g), 0],
+            [math.sin(g), math.cos(g), 0],
+            [0, 0, 1]
+        ])
+        
+        rotation_matrix = rot_z @ rot_y @ rot_x
         return rotation_matrix
-
-    @classmethod
-    def from_dict(cls, data):
-        return cls(data['radius'], data['center_x'], data['center_y'], data['center_z'], data['segments'])
     
     def generate_edges(self):
         points = self.generate_points()
         edges = []
         
-        # Connect consecutive points with edges (segments)
+        # Connect consecutive points with edges
         for i in range(len(points)):
             start_point = points[i]
-            end_point = points[(i + 1) % len(points)]  # Wrap around to the first point
+            end_point = points[(i + 1) % len(points)]
             
             edges.append((start_point, end_point))
         
         return edges
-
-
+        
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data['radius'], data['x_c'], data['y_c'], data['z_c'], data['x_ang'], data['y_ang'], data['z_ang'], data['segments'])
 
 def load_rings(filename=GRID_FILE):
     with open(filename, 'r') as file:
